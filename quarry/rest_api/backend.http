@@ -2,3 +2,6 @@
 
 GET {{baseUrl}}/users
 Accept: application/json
+
+GET {{baseUrl}}/
+Accept: application/json

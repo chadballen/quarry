@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:quarry/Responses/tmpResponse.dart';
-
+import 'package:quarry/myHealth.dart';
+import 'package:quarry/myMap.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Quarry',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -50,19 +52,21 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  int _selectedIndex = 0;
 
+  final routes = {1: "Home", 2: "Health", 3: "Map"};
 
-Future<TmpResponse> fetchCurrentData() async {
+  Future<TmpResponse> fetchCurrentData() async {
     final url = 'http://192.168.0.11:3000/users';
-final response = await http.get(url);
-  if (response.statusCode == 200) {
-    print(json.decode(response.body));
-    return TmpResponse.fromJson(json.decode(response.body));
-  } else {
-    throw Exception('Failed to Load Album');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      print(json.decode(response.body));
+      return TmpResponse.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to Load Album');
+    }
   }
 
-  }
   void _incrementCounter() async {
     final data = await fetchCurrentData();
     setState(() {
@@ -71,8 +75,25 @@ final response = await http.get(url);
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter=data.value;
+      _counter = data.value;
     });
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Widget _buildChild() {
+    List<String> sympt = ["runny nose","cough", "fever", "shortness of breath", "lethargy"];
+    if (_selectedIndex == 0) {
+      return MyHealth(sympt);
+    } else if (_selectedIndex == 1) {
+      return MyHealth(sympt);
+    } else if (_selectedIndex == 2) {
+      return MyMap();
+    }
   }
 
   @override
@@ -83,46 +104,39 @@ final response = await http.get(url);
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
+      body: Container(
+        child: _buildChild(),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            title: Text('Home'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.local_hospital),
+            title: Text('MyHealth'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            title: Text('Map'),
+          )
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+        tooltip: 'Report',
+        child: Icon(Icons.chat),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
